@@ -1,0 +1,5 @@
+# FastAPI dependencies
+fastapi
+uvicorn
+sqlalchemy
+pydantic

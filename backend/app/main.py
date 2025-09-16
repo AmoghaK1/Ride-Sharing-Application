@@ -2,6 +2,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.controllers import ride_controller
+from app.controllers import auth_controller
+from app.config import mongodb_client
 
 app = FastAPI(title="College Carpool App")
 
@@ -14,8 +16,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.on_event("startup")
+async def startup_event():
+    """Test MongoDB connection on startup"""
+    try:
+        # Ping the database to verify connection
+        mongodb_client.admin.command('ping')
+        print("✅ MongoDB connected successfully")
+    except Exception as e:
+        print(f"❌ MongoDB connection failed: {e}")
+
 # Register controllers (routers)
 app.include_router(ride_controller.router)
+app.include_router(auth_controller.router)
 
 @app.get("/")
 def root():

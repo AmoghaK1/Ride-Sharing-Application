@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function Login() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -41,6 +43,30 @@ function Login() {
         }}>
           Login
         </button>
+        
+        <p style={{
+          textAlign: "center",
+          marginTop: "15px",
+          color: "#666",
+          fontSize: "14px"
+        }}>
+          Don't have an account? 
+          <button 
+            type="button"
+            onClick={() => navigate('/register')}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#007bff",
+              textDecoration: "underline",
+              cursor: "pointer",
+              fontWeight: "500",
+              marginLeft: "5px"
+            }}
+          >
+            Sign up
+          </button>
+        </p>
       </form>
     </div>
   );

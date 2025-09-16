@@ -1,5 +1,11 @@
 # FastAPI dependencies
 fastapi
 uvicorn
-sqlalchemy
-pydantic
+pydantic[email]
+
+# MongoDB dependencies
+pymongo[srv]
+python-dotenv
+
+# Security dependencies
+passlib[bcrypt]

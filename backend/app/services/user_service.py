@@ -61,3 +61,12 @@ class UserService:
         """Check if email already exists in database"""
         user = self.users_collection.find_one({"email": email.lower()})
         return user is not None
+    
+    async def get_user_by_email(self, email: str):
+        """Get user by email"""
+        try:
+            user = self.users_collection.find_one({"email": email.lower()})
+            return user
+        except Exception as e:
+            print(f"Error getting user by email: {e}")
+            return None

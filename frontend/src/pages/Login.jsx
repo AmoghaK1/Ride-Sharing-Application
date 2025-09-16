@@ -5,11 +5,39 @@ function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
-    e.preventDefault(); // stops page reload
-    console.log("Email:", email, "Password:", password);
-    alert(`Email: ${email}, Password: ${password}`);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const response = await fetch('http://localhost:8000/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Store token and user data
+        localStorage.setItem('token', data.access_token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        
+        // Redirect to dashboard
+        navigate('/dashboard');
+      } else {
+        const errorData = await response.json();
+        alert(`Login failed: ${errorData.detail}`);
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      alert('Login failed. Please try again.');
+    }
+
+    setLoading(false);
   };
 
   return (
@@ -37,11 +65,12 @@ function Login() {
           required
           style={{ padding: "8px", borderRadius: "5px", border: "1px solid #ccc" }}
         />
-        <button type="submit" style={{
+        <button type="submit" disabled={loading} style={{
           padding: "10px", borderRadius: "5px", border: "none",
-          backgroundColor: "#007bff", color: "white", fontWeight: "bold"
+          backgroundColor: loading ? "#ccc" : "#007bff", 
+          color: "white", fontWeight: "bold"
         }}>
-          Login
+          {loading ? "Logging in..." : "Login"}
         </button>
         
         <p style={{

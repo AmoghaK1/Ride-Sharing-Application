@@ -9,3 +9,4 @@ python-dotenv
 
 # Security dependencies
 passlib[bcrypt]
+PyJWT

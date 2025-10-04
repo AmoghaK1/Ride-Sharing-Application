@@ -55,6 +55,25 @@ function Register() {
       return false;
     }
     
+    // Validate full name length
+    if (formData.fullName.trim().length < 2) {
+      alert(VALIDATION_MESSAGES.FULL_NAME_TOO_SHORT);
+      return false;
+    }
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      alert(VALIDATION_MESSAGES.INVALID_EMAIL);
+      return false;
+    }
+    
+    // Validate password length
+    if (formData.password.length < 6) {
+      alert(VALIDATION_MESSAGES.PASSWORD_TOO_SHORT);
+      return false;
+    }
+    
     if (formData.password !== formData.confirmPassword) {
       alert(VALIDATION_MESSAGES.PASSWORD_MISMATCH);
       return false;
@@ -110,7 +129,7 @@ function Register() {
           password: formData.password,
           residence_type: formData.residenceType,
           has_vehicle: formData.hasVehicle,
-          vehicle_type: formData.vehicleType,
+          vehicle_type: formData.vehicleType || null,  // Send null instead of empty string
           home_address: {
             society_hostel_name: formData.homeAddress.societyHostelName,
             street: formData.homeAddress.street,
@@ -136,7 +155,16 @@ function Register() {
           navigate('/login');
         } else {
           const errorData = await response.json();
-          alert(`Registration failed: ${errorData.detail}`);
+          
+          // Handle validation errors from backend
+          if (Array.isArray(errorData.detail)) {
+            const errorMessages = errorData.detail.map(err => 
+              `${err.field}: ${err.message}`
+            ).join('\n');
+            alert(`Registration failed:\n${errorMessages}`);
+          } else {
+            alert(`Registration failed: ${errorData.detail}`);
+          }
         }
       } catch (error) {
         console.error('Registration error:', error);

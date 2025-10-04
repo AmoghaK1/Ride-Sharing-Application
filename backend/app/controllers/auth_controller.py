@@ -16,6 +16,7 @@ class LoginRequest(BaseModel):
 async def register_user(user_data: UserRegistration):
     """Register a new user"""
     try:
+        print(f"DEBUG: Received registration data: {user_data.model_dump()}")
         # Check if email already exists
         if await user_service.check_email_exists(user_data.email):
             raise HTTPException(

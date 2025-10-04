@@ -1,11 +1,33 @@
 # FastAPI entry point
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from app.controllers import ride_controller
 from app.controllers import auth_controller
 from app.config import mongodb_client
 
 app = FastAPI(title="College Carpool App")
+
+# Add exception handler for validation errors
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    print(f"❌ Validation Error: {exc.errors()}")
+    print(f"❌ Body received: {exc.body}")
+    
+    # Format errors in a user-friendly way
+    errors = []
+    for error in exc.errors():
+        errors.append({
+            "field": " -> ".join(str(loc) for loc in error["loc"]),
+            "message": error["msg"],
+            "type": error["type"]
+        })
+    
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={"detail": errors},
+    )
 
 # Add CORS middleware
 app.add_middleware(

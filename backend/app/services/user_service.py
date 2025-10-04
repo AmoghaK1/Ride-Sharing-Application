@@ -70,3 +70,13 @@ class UserService:
         except Exception as e:
             print(f"Error getting user by email: {e}")
             return None
+    
+    async def get_user_by_id(self, user_id: str):
+        """Get user by ID"""
+        try:
+            from bson import ObjectId
+            user = self.users_collection.find_one({"_id": ObjectId(user_id)})
+            return user
+        except Exception as e:
+            print(f"Error getting user by ID: {e}")
+            return None

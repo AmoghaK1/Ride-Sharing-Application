@@ -26,8 +26,12 @@ function Login() {
         localStorage.setItem('token', data.access_token);
         localStorage.setItem('user', JSON.stringify(data.user));
         
-        // Redirect to dashboard
-        navigate('/dashboard');
+        // Redirect based on has_vehicle status
+        if (data.user.has_vehicle === 'yes' || data.user.has_vehicle === true) {
+          navigate('/rider');
+        } else {
+          navigate('/hostelite');
+        }
       } else {
         const errorData = await response.json();
         alert(`Login failed: ${errorData.detail}`);

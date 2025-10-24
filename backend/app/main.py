@@ -5,9 +5,17 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from app.controllers import ride_controller
 from app.controllers import auth_controller
-from app.config import mongodb_client
+from app.config import get_db
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from app.utils.rate_limiter import limiter, rate_limit_middleware
 
 app = FastAPI(title="College Carpool App")
+
+# Configure rate limiter
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.middleware("http")(rate_limit_middleware)
 
 # Add exception handler for validation errors
 @app.exception_handler(RequestValidationError)
@@ -40,11 +48,10 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup_event():
-    """Test MongoDB connection on startup"""
+    """Initialize database connection on startup"""
     try:
-        # Ping the database to verify connection
-        mongodb_client.admin.command('ping')
-        print("✅ MongoDB connected successfully")
+        # Initialize database connection
+        await get_db()
     except Exception as e:
         print(f"❌ MongoDB connection failed: {e}")
 

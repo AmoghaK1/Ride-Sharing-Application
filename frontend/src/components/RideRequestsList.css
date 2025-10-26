@@ -1,0 +1,126 @@
+.ride-requests-list {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.ride-requests-list h2 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.requests-container {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+.ride-request-card {
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.ride-request-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.request-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.pickup-time {
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+.distance {
+  color: #7f8c8d;
+  font-size: 0.9em;
+}
+
+.locations {
+  margin-bottom: 16px;
+}
+
+.locations .pickup,
+.locations .dropoff {
+  display: flex;
+  align-items: center;
+  margin: 8px 0;
+}
+
+.location-icon {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.location-icon.pickup {
+  background-color: #27ae60;
+}
+
+.location-icon.dropoff {
+  background-color: #e74c3c;
+}
+
+.request-details {
+  display: flex;
+  justify-content: space-between;
+  margin: 12px 0;
+  padding: 8px 0;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+}
+
+.passengers,
+.fare {
+  font-weight: 500;
+}
+
+.special-requirements {
+  display: flex;
+  align-items: center;
+  margin: 12px 0;
+  font-size: 0.9em;
+  color: #666;
+}
+
+.info-icon {
+  color: #3498db;
+  margin-right: 8px;
+}
+
+.accept-btn {
+  width: 100%;
+  padding: 12px;
+  background-color: #2ecc71;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.accept-btn:hover {
+  background-color: #27ae60;
+}
+
+.loading,
+.error,
+.no-rides {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+}
+
+.error {
+  color: #e74c3c;
+}

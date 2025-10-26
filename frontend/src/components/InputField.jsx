@@ -13,27 +13,27 @@ const InputField = ({
   const inputStyle = {
     width: "100%",
     padding: "12px",
-    marginBottom: "15px",
-    border: "1px solid #ddd",
-    borderRadius: "8px",
-    fontSize: "16px",
+    marginBottom: "16px",
+    border: "1px solid #d1d5db",
+    borderRadius: "6px",
+    fontSize: "clamp(14px, 3.5vw, 16px)",
     boxSizing: "border-box",
-    transition: "border-color 0.3s ease",
+    transition: "border-color 0.2s ease",
     ...style
   };
 
   const labelStyle = {
     display: "block",
     marginBottom: "8px",
-    color: "#555",
-    fontSize: "14px",
+    color: "#374151",
+    fontSize: "clamp(14px, 3.5vw, 16px)",
     fontWeight: "500"
   };
 
   return (
     <div>
       <label style={labelStyle}>
-        {label} {required && "*"}
+        {label} {required && <span style={{ color: '#dc2626' }}>*</span>}
       </label>
       <input
         type={type}
@@ -45,8 +45,12 @@ const InputField = ({
         minLength={minLength}
         pattern={pattern}
         style={inputStyle}
-        onFocus={(e) => e.target.style.borderColor = "#007bff"}
-        onBlur={(e) => e.target.style.borderColor = "#ddd"}
+        onFocus={(e) => {
+          e.target.style.borderColor = "#3b82f6";
+        }}
+        onBlur={(e) => {
+          e.target.style.borderColor = "#d1d5db";
+        }}
       />
     </div>
   );

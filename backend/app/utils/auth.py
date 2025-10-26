@@ -35,6 +35,20 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
+def verify_token(token: str) -> Optional[dict]:
+    """Verify JWT token and return payload"""
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except jwt.PyJWTError:
+        return None
+
+def get_current_user_id(token: str) -> Optional[str]:
+    """Extract user ID from JWT token"""
+    payload = verify_token(token)
+    if payload:
+        return payload.get("sub")
+    return None
 async def get_current_user(token: str = Depends(oauth2_scheme)):
     """Get the current user from the JWT token"""
     credentials_exception = HTTPException(

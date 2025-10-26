@@ -29,6 +29,10 @@ class UserRegistration(BaseModel):
     def validate_password(cls, v):
         if len(v) < 6:
             raise ValueError('Password must be at least 6 characters long')
+        # bcrypt only uses the first 72 bytes; longer inputs can cause errors or be truncated.
+        # Enforce a 72-byte maximum in UTF-8 to avoid unsafe truncation.
+        if len(v.encode('utf-8')) > 72:
+            raise ValueError('Password must be at most 72 bytes long')
         return v
 
     @validator('vehicle_type')

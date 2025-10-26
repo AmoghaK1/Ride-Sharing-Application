@@ -5,10 +5,12 @@ pydantic[email]
 
 # MongoDB dependencies
 pymongo[srv]
+motor>=3.3.0,<4.0.0
 python-dotenv
 
 # Security dependencies
-passlib[bcrypt]
+passlib[bcrypt]==1.7.4
+bcrypt==3.2.2
 PyJWT
 
 # Rate limiting

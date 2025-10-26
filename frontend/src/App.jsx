@@ -4,6 +4,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import RiderView from "./pages/RiderView";
 import HosteliteView from "./pages/HosteliteView";
+import RiderDashboard from "./components/RiderDashboard/RiderDashboard";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/rider" element={<RiderView />} />
         <Route path="/hostelite" element={<HosteliteView />} />
+        <Route path="/rider/dashboard" element={<RiderDashboard />} />
       </Routes>
     </Router>
   );

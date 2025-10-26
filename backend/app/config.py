@@ -1,19 +1,38 @@
 # Database connection and settings configuration
 import os
-from pymongo import MongoClient
+import motor.motor_asyncio
 from dotenv import load_dotenv
+from functools import lru_cache
 
 # Load environment variables
 load_dotenv()
 
-# MongoDB configuration
-MONGODB_URL = os.getenv("MONGODB_URL")
-DATABASE_NAME = os.getenv("DATABASE_NAME", "ride_sharing_app")
+class Settings:
+    PROJECT_NAME: str = "Ride Sharing Application"
+    PROJECT_VERSION: str = "1.0.0"
+    MONGODB_URL: str = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
+    DATABASE_NAME: str = os.getenv("DATABASE_NAME", "ride_sharing_app")
+
+@lru_cache()
+def get_settings():
+    return Settings()
 
 # MongoDB client instance
-mongodb_client = MongoClient(MONGODB_URL)
-database = mongodb_client[DATABASE_NAME]
+_client = None
+_db = None
 
-def get_database():
+async def get_db():
     """Get database instance"""
-    return database
+    global _client, _db
+    if _client is None:
+        settings = get_settings()
+        _client = motor.motor_asyncio.AsyncIOMotorClient(settings.MONGODB_URL)
+        _db = _client[settings.DATABASE_NAME]
+        # Test the connection
+        try:
+            await _client.admin.command('ping')
+            print("✅ MongoDB connected successfully")
+        except Exception as e:
+            print(f"❌ MongoDB connection error: {e}")
+            raise e
+    return _db

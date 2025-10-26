@@ -1,20 +1,26 @@
 from datetime import datetime
-from app.config import get_database
+from app.config import get_db
 from app.models.user_model import User, UserRegistration
 from app.utils.auth import hash_password
 from pymongo.errors import DuplicateKeyError
 
 class UserService:
     def __init__(self):
-        self.db = get_database()
-        self.users_collection = self.db.users
-        
-        # Create unique index on email
-        self.users_collection.create_index("email", unique=True)
+        self.db = None
+        self.users_collection = None
+    
+    async def initialize(self):
+        if self.db is None:
+            self.db = await get_db()
+            self.users_collection = self.db.users
+            # Create unique index on email
+            await self.users_collection.create_index("email", unique=True)
+        return self
     
     async def create_user(self, user_data: UserRegistration) -> dict:
         """Create a new user in the database"""
         try:
+            await self.initialize()
             # Hash the password
             password_hash = hash_password(user_data.password)
             
@@ -38,7 +44,7 @@ class UserService:
             }
             
             # Insert user into database
-            result = self.users_collection.insert_one(user_doc)
+            result = await self.users_collection.insert_one(user_doc)
             
             return {
                 "success": True,
@@ -59,13 +65,15 @@ class UserService:
     
     async def check_email_exists(self, email: str) -> bool:
         """Check if email already exists in database"""
-        user = self.users_collection.find_one({"email": email.lower()})
+        await self.initialize()
+        user = await self.users_collection.find_one({"email": email.lower()})
         return user is not None
     
     async def get_user_by_email(self, email: str):
         """Get user by email"""
         try:
-            user = self.users_collection.find_one({"email": email.lower()})
+            await self.initialize()
+            user = await self.users_collection.find_one({"email": email.lower()})
             return user
         except Exception as e:
             print(f"Error getting user by email: {e}")

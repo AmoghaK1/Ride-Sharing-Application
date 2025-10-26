@@ -28,7 +28,7 @@ function Login() {
         
         // Redirect based on has_vehicle status
         if (data.user.has_vehicle === 'yes' || data.user.has_vehicle === true) {
-          navigate('/rider');
+          navigate('/rider/dashboard');
         } else {
           navigate('/hostelite');
         }

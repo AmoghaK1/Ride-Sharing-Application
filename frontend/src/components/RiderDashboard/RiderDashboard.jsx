@@ -54,10 +54,55 @@ const RiderDashboard = () => {
             }
 
             const data = await response.json();
-            setRides(data.rides);
+            let ridesData = data.rides || [];
+
+            // Dev-only: if there are no rides, inject a mock ride so designers/devs can see the UI
+            // Uses Vite env flag available as import.meta.env.DEV
+            if ((import.meta.env && import.meta.env.DEV) && (!ridesData || ridesData.length === 0)) {
+                const mockRide = {
+                    id: 'mock-1',
+                    passenger_id: 'student123',
+                    passenger_name: 'Asha Kumar',
+                    pickup_location: { address: 'Hostel A, Block 3', latitude: position.coords.latitude, longitude: position.coords.longitude },
+                    dropoff_location: { address: 'College Main Gate', latitude: position.coords.latitude + 0.01, longitude: position.coords.longitude + 0.01 },
+                    pickup_time: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+                    requested_time: new Date().toISOString(),
+                    status: 'pending',
+                    number_of_passengers: 1,
+                    estimated_fare: 80.0,
+                    special_requirements: null,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                };
+
+                ridesData = [mockRide];
+            }
+
+            setRides(ridesData);
         } catch (err) {
-            setError(err.message);
             console.error('Error fetching rides:', err);
+            // In dev, gracefully fall back to mock ride so UI can be inspected
+            if (import.meta.env && import.meta.env.DEV) {
+                const mockRide = {
+                    id: 'mock-1',
+                    passenger_id: 'student123',
+                    passenger_name: 'Asha Kumar',
+                    pickup_location: { address: 'Hostel A, Block 3' },
+                    dropoff_location: { address: 'College Main Gate' },
+                    pickup_time: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+                    requested_time: new Date().toISOString(),
+                    status: 'pending',
+                    number_of_passengers: 1,
+                    estimated_fare: 80.0,
+                    special_requirements: null,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                };
+                setRides([mockRide]);
+                setError(null);
+            } else {
+                setError(err.message);
+            }
         } finally {
             setLoading(false);
         }

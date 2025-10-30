@@ -40,25 +40,11 @@ const RideFilters = ({ filters, onFilterChange }) => {
                 </select>
             </div>
 
-            <div className="filter-group">
-                <label htmlFor="status">Ride Status</label>
-                <select
-                    id="status"
-                    value={filters.status}
-                    onChange={(e) => handleFilterChange('status', e.target.value)}
-                >
-                    <option value="pending">Pending</option>
-                    <option value="accepted">Accepted</option>
-                    <option value="all">All</option>
-                </select>
-            </div>
-
             <button 
                 className="clear-filters"
                 onClick={() => onFilterChange({
                     distance: 10,
-                    timeWindow: 60,
-                    status: 'pending'
+                    timeWindow: 60
                 })}
             >
                 Clear Filters

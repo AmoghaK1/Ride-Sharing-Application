@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import RideRequestsList from '../components/RideRequestsList';
+import HostelitesList from '../components/HostelitesList/HostelitesList';
 import './RiderDashboard.css';
 
 const RiderDashboard = () => {
@@ -75,7 +75,7 @@ const RiderDashboard = () => {
 
       <main className="dashboard-content">
         {currentLocation ? (
-          <RideRequestsList
+          <HostelitesList
             currentLocation={currentLocation}
             maxDistance={filters.maxDistance}
             timeWindow={filters.timeWindow}

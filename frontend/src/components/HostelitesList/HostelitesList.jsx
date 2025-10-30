@@ -1,12 +1,12 @@
 import React from 'react';
 import RideCard from '../RideCard/RideCard';
-import './RideRequestsList.css';
+import '../RideRequestsList/RideRequestsList.css';
 
-const RideRequestsList = ({ rides }) => {
+const HostelitesList = ({ rides }) => {
     if (!rides || rides.length === 0) {
         return (
             <div className="no-rides">
-                <p>No rides available matching your criteria.</p>
+                <p>No hostelites requesting nearby.</p>
                 <small>Try adjusting your filters or check back later.</small>
             </div>
         );
@@ -15,10 +15,8 @@ const RideRequestsList = ({ rides }) => {
     return (
         <div className="ride-requests-list">
             <div className="list-header">
-                <h3>Available Rides ({rides.length})</h3>
-                <div className="sort-section">
-                    {/* Add sorting options here if needed */}
-                </div>
+                <h3>Hostelites Nearby ({rides.length})</h3>
+                <div className="sort-section" />
             </div>
             <div className="rides-grid">
                 {rides.map((ride) => (
@@ -29,4 +27,4 @@ const RideRequestsList = ({ rides }) => {
     );
 };
 
-export default RideRequestsList;
+export default HostelitesList;

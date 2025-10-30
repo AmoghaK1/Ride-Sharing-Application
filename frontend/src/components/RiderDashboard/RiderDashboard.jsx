@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import RideFilters from '../RideFilters/RideFilters';
-import RideRequestsList from '../RideRequestsList/RideRequestsList';
+import HostelitesList from '../HostelitesList/HostelitesList';
 import './RiderDashboard.css';
 
 const RiderDashboard = () => {
@@ -90,7 +90,7 @@ const RiderDashboard = () => {
                 </div>
                 
                 <div className="rides-section">
-                    <RideRequestsList rides={rides} />
+                    <HostelitesList rides={rides} />
                 </div>
             </div>
         </div>

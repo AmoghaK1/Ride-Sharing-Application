@@ -44,34 +44,25 @@ const RideCard = ({ ride }) => {
         }
     };
 
+    const passengerName = ride.passenger_name || ride.passenger_id || 'Student';
+    const pickupAddress = ride.pickup_location?.address || 'Unknown location';
+
     return (
         <div className="ride-card">
             <div className="ride-header">
-                <span className={`status-badge ${ride.status}`}>{ride.status}</span>
-                <span className="ride-fare">₹{ride.estimated_fare}</span>
+                <div>
+                    <div style={{ fontSize: '1rem', fontWeight: 700 }}>{passengerName}</div>
+                    <div style={{ fontSize: '0.9rem', color: '#666' }}>{pickupAddress}</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                    <span className={`status-badge ${ride.status}`}>{ride.status}</span>
+                </div>
             </div>
 
             <div className="ride-details">
-                <div className="location-info">
-                    <div className="pickup">
-                        <label>Pickup</label>
-                        <p>{ride.pickup_location.address}</p>
-                    </div>
-                    <div className="dropoff">
-                        <label>Dropoff</label>
-                        <p>{ride.dropoff_location.address}</p>
-                    </div>
-                </div>
-
                 <div className="time-info">
                     <div className="date">{date}</div>
                     <div className="time">{time}</div>
-                </div>
-
-                <div className="passenger-info">
-                    <span className="passengers">
-                        <i className="fas fa-user"></i> {ride.number_of_passengers} passenger(s)
-                    </span>
                 </div>
 
                 {ride.special_requirements && (
@@ -85,10 +76,9 @@ const RideCard = ({ ride }) => {
             <div className="ride-actions">
                 {ride.status === 'pending' && (
                     <button className="accept-button" onClick={handleAcceptRide}>
-                        Accept Ride
+                        Accept Ride Request
                     </button>
                 )}
-                <button className="details-button">View Details</button>
             </div>
         </div>
     );

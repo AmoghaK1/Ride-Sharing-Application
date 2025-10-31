@@ -11,10 +11,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # ✅ 1. Checkout your repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ✅ Create SSH key inside /tmp (absolute path)
+      # ✅ 2. Setup SSH key (raw or base64)
       - name: Setup SSH key
         env:
           RAW_KEY: ${{ secrets.EC2_SSH_KEY }}
@@ -23,7 +24,7 @@ jobs:
           set -e
           mkdir -p /tmp/ssh
           if [ -n "$B64_KEY" ]; then
-            echo "Decoding SSH key from base64 secret"
+            echo "Writing SSH key from base64 secret"
             echo "$B64_KEY" | base64 -d > /tmp/ssh/private_key.pem
           elif [ -n "$RAW_KEY" ]; then
             echo "Writing SSH key from raw secret"
@@ -33,21 +34,26 @@ jobs:
             exit 1
           fi
           chmod 600 /tmp/ssh/private_key.pem
-          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> /tmp/ssh/known_hosts
-          echo "✅ SSH key written to /tmp/ssh/private_key.pem"
 
-      # ✅ Upload project files using the absolute key path
+      # ✅ 3. Verify SSH key creation
+      - name: Verify SSH key presence
+        run: |
+          set -e
+          ls -l /tmp/ssh/private_key.pem
+          echo "Key size:"
+          wc -c /tmp/ssh/private_key.pem
+
+      # ✅ 4. Upload project files to EC2
       - name: Upload project files to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key_path: /tmp/ssh/private_key.pem
-          source: "./"
-          target: "/home/${{ secrets.EC2_USER }}/ride-sharing-application"
-          overwrite: true
+          source: ./
+          target: /home/${{ secrets.EC2_USER }}/ride-sharing-application
 
-      # ✅ SSH into EC2 and deploy using Docker Compose
+      # ✅ 5. SSH into EC2 and deploy via Docker Compose
       - name: Deploy on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:

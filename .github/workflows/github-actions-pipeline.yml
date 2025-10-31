@@ -3,7 +3,7 @@ name: Deploy to EC2
 on:
   push:
     branches:
-      - main  # Deploy only when main branch is updated
+      - main
 
 jobs:
   deploy:
@@ -13,25 +13,31 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
-      # Upload project files to EC2
+
+      # ✅ Create private key file from secret (preserves format)
+      - name: Setup SSH key
+        run: |
+          echo "${{ secrets.EC2_SSH_KEY }}" > private_key.pem
+          chmod 600 private_key.pem
+
+      # ✅ Upload project files
       - name: Upload project files to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          key_path: private_key.pem     # 🔥 use file instead of inline key
           source: |
             ./
           target: /home/${{ secrets.EC2_USER }}/ride-sharing-application
 
-      # SSH into EC2 and deploy using Docker Compose
+      # ✅ SSH into EC2 and deploy
       - name: Deploy on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          key_path: private_key.pem     # 🔥 again, use the file
           script_stop: true
           script: |
             set -e
@@ -59,4 +65,3 @@ jobs:
             docker image prune -f || true
 
             echo "✅ Deployment complete!"
-

@@ -2,16 +2,20 @@ name: Deploy to EC2
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main  # Deploy only when main branch is updated
 
 jobs:
   deploy:
+    name: Deploy to EC2 Instance
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Upload project to EC2
+      # Upload project files to EC2
+      - name: Upload project files to EC2
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -21,9 +25,12 @@ jobs:
             backend/**
             frontend/**
             docker-compose.yml
+            package.json
+            package-lock.json
           target: /home/${{ secrets.EC2_USER }}/ride-sharing-application
 
-      - name: Deploy on EC2 (build and run with docker compose)
+      # SSH into EC2 and deploy using Docker Compose
+      - name: Deploy on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -34,22 +41,25 @@ jobs:
             set -e
             cd /home/${{ secrets.EC2_USER }}/ride-sharing-application
 
-            # Ensure .env exists with production values
+            echo "📦 Creating .env file..."
             cat > .env << 'EOF'
             MONGODB_URL=${{ secrets.MONGODB_URL }}
             DATABASE_NAME=${{ secrets.DATABASE_NAME }}
             VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}
+            PORT=${{ secrets.PORT }}
             EOF
 
-            # Pick docker compose command (plugin vs legacy)
+            echo "🧹 Cleaning up old containers..."
+            docker compose down || docker-compose down || true
+
+            echo "🔧 Building and starting containers..."
             if docker compose version >/dev/null 2>&1; then
-              DC="docker compose"
+              docker compose up -d --build
             else
-              DC="docker-compose"
+              docker-compose up -d --build
             fi
 
-            # Build and start containers
-            $DC up -d --build
-
-            # Optional: prune dangling images
+            echo "🧽 Pruning unused images..."
             docker image prune -f || true
+
+            echo "✅ Deployment complete!"

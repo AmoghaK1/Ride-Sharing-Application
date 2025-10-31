@@ -22,11 +22,11 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           source: |
-            backend/**
-            frontend/**
-            docker-compose.yml
-            package.json
-            package-lock.json
+            ./backend/**
+            ./frontend/**
+            ./docker-compose.yml
+            ./package.json
+            ./package-lock.json
           target: /home/${{ secrets.EC2_USER }}/ride-sharing-application
 
       # SSH into EC2 and deploy using Docker Compose

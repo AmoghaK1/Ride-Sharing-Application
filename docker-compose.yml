@@ -1,0 +1,31 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.backend
+    container_name: ride-backend
+    restart: unless-stopped
+    env_file:
+      - ./.env
+    # If you prefer explicit vars instead of env_file, uncomment below and set values via Compose env
+    # environment:
+    #   MONGODB_URL: ${MONGODB_URL}
+    #   DATABASE_NAME: ${DATABASE_NAME:-ride_sharing_app}
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.frontend
+      args:
+        # Browser calls backend at localhost:8000; override with VITE_API_BASE_URL in .env if needed
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
+    container_name: ride-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend

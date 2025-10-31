@@ -1,0 +1,55 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Upload project to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: |
+            backend/**
+            frontend/**
+            docker-compose.yml
+          target: /home/${{ secrets.EC2_USER }}/ride-sharing-application
+
+      - name: Deploy on EC2 (build and run with docker compose)
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script_stop: true
+          script: |
+            set -e
+            cd /home/${{ secrets.EC2_USER }}/ride-sharing-application
+
+            # Ensure .env exists with production values
+            cat > .env << 'EOF'
+            MONGODB_URL=${{ secrets.MONGODB_URL }}
+            DATABASE_NAME=${{ secrets.DATABASE_NAME }}
+            VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }}
+            EOF
+
+            # Pick docker compose command (plugin vs legacy)
+            if docker compose version >/dev/null 2>&1; then
+              DC="docker compose"
+            else
+              DC="docker-compose"
+            fi
+
+            # Build and start containers
+            $DC up -d --build
+
+            # Optional: prune dangling images
+            docker image prune -f || true

@@ -1,0 +1,20 @@
+# Ignore local and dev-only files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pytest_cache/
+.mypy_cache/
+
+# Environments and IDE
+venv/
+.env
+.vscode/
+.idea/
+
+# Git
+.git
+.gitignore
+
+# App-specific
+cache/

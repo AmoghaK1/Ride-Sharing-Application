@@ -23,22 +23,22 @@ jobs:
           set -e
           if [ -n "$B64_KEY" ]; then
             echo "Writing SSH key from base64 secret"
-            echo "$B64_KEY" | base64 -d > /tmp/private_key.pem
+              echo "$B64_KEY" | base64 -d > "$GITHUB_WORKSPACE/private_key.pem"
           elif [ -n "$RAW_KEY" ]; then
             echo "Writing SSH key from raw secret"
             # Preserve exact newlines and avoid echo quirks
-            printf "%s" "$RAW_KEY" > /tmp/private_key.pem
+              printf "%s" "$RAW_KEY" > "$GITHUB_WORKSPACE/private_key.pem"
           else
             echo "No SSH key secret provided (EC2_SSH_KEY or EC2_SSH_KEY_B64)" >&2
             exit 1
           fi
-          chmod 600 /tmp/private_key.pem
+            chmod 600 "$GITHUB_WORKSPACE/private_key.pem"
 
       - name: Verify SSH key presence
         run: |
           set -e
-          ls -l /tmp/private_key.pem
-          wc -c /tmp/private_key.pem
+            ls -l "$GITHUB_WORKSPACE/private_key.pem"
+            wc -c "$GITHUB_WORKSPACE/private_key.pem"
 
       # ✅ Upload project files to EC2
       - name: Upload project files to EC2
@@ -46,7 +46,7 @@ jobs:
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
-          key_path: /tmp/private_key.pem
+            key_path: private_key.pem
           source: |
             ./
           target: /home/${{ secrets.EC2_USER }}/ride-sharing-application
@@ -57,7 +57,7 @@ jobs:
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
-          key_path: /tmp/private_key.pem
+            key_path: private_key.pem
           script_stop: true
           script: |
             set -e

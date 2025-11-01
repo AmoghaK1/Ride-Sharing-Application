@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from app.services.routing_service import RoutingService
+from app.config import get_settings
 import os
 
 router = APIRouter(prefix="/routing", tags=["Routing"])
@@ -21,11 +22,13 @@ class ShortestPathResponse(BaseModel):
 
 # Initialize service with data dir
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data')
-routing_service = RoutingService(DATA_DIR)
+settings = get_settings()
+routing_service = RoutingService(DATA_DIR, college_lat=settings.COLLEGE_LAT, college_lng=settings.COLLEGE_LNG)
 
 @router.post("/shortest-path", response_model=ShortestPathResponse)
 async def shortest_path(req: ShortestPathRequest):
     try:
+        # Use configured college location
         res = routing_service.shortest_path_to_college(
             start_lat=req.start_location.latitude,
             start_lng=req.start_location.longitude
@@ -37,3 +40,8 @@ async def shortest_path(req: ShortestPathRequest):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/college-location")
+async def college_location():
+    """Return configured college lat/lng so clients can show a marker."""
+    return {"latitude": settings.COLLEGE_LAT, "longitude": settings.COLLEGE_LNG}

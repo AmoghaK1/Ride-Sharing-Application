@@ -15,9 +15,13 @@ class Node:
     lng: float
 
 class RoutingService:
-    def __init__(self, data_dir: str):
+    def __init__(self, data_dir: str, college_lat: float | None = None, college_lng: float | None = None):
         self.nodes: Dict[str, Node] = {}
         self.graph: Graph = {}
+        # Optional college coordinates (if provided, we compute nearest node to these)
+        self.college_coords: Tuple[float, float] | None = None
+        if college_lat is not None and college_lng is not None:
+            self.college_coords = (college_lat, college_lng)
         self.college_id: str = "college"
         self._load_graph(os.path.join(data_dir, 'campus_graph.json'))
 
@@ -85,9 +89,27 @@ class RoutingService:
         path.reverse()
         return dist[end_id], path
 
-    def shortest_path_to_college(self, start_lat: float, start_lng: float):
+    def shortest_path(self, start_lat: float, start_lng: float, dest_lat: float, dest_lng: float):
         start_node = self._nearest_node(start_lat, start_lng)
-        end_node = self.college_id
+        end_node = self._nearest_node(dest_lat, dest_lng)
+        total_km, path_ids = self.dijkstra(start_node, end_node)
+        coords = [[self.nodes[nid].lat, self.nodes[nid].lng] for nid in path_ids]
+        return {
+            "start_node": start_node,
+            "end_node": end_node,
+            "distance_km": round(total_km, 3),
+            "nodes": path_ids,
+            "path": coords
+        }
+
+    def shortest_path_to_college(self, start_lat: float, start_lng: float):
+        # If configured college coordinates are available, route to nearest node to that
+        if self.college_coords is not None:
+            dest_lat, dest_lng = self.college_coords
+            return self.shortest_path(start_lat, start_lng, dest_lat, dest_lng)
+        # Fallback to explicit 'college' node in graph
+        start_node = self._nearest_node(start_lat, start_lng)
+        end_node = self.college_id if self.college_id in self.nodes else start_node
         total_km, path_ids = self.dijkstra(start_node, end_node)
         coords = [[self.nodes[nid].lat, self.nodes[nid].lng] for nid in path_ids]
         return {

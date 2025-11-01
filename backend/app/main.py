@@ -5,6 +5,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from app.controllers import ride_controller
 from app.controllers import auth_controller
+from app.controllers import routing_controller
 from app.config import get_db, get_settings
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -67,6 +68,7 @@ async def startup_event():
 # Register controllers (routers)
 app.include_router(ride_controller.router)
 app.include_router(auth_controller.router)
+app.include_router(routing_controller.router)
 
 @app.get("/")
 def root():

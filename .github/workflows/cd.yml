@@ -33,12 +33,45 @@ jobs:
           # Set this in repo/environment secrets. Example: /home/ec2-user/ride/.env
           echo "ENV_FILE_PATH=${{ secrets.ENV_FILE_PATH }}" >> $GITHUB_ENV
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ env.DOCKERHUB_USERNAME }}
-          password: ${{ env.DOCKERHUB_TOKEN }}
-          registry: docker.io
+      - name: Ensure Docker engine is installed and running
+        shell: bash
+        run: |
+          set -euo pipefail
+          if command -v docker >/dev/null 2>&1; then
+            echo "Docker CLI found: $(docker --version)"
+          else
+            echo "Docker not found. Installing..."
+            if [ -f /etc/os-release ]; then . /etc/os-release; else ID=""; fi
+            case "$ID" in
+              amzn)
+                # Amazon Linux 2/2023
+                if command -v dnf >/dev/null 2>&1; then sudo dnf -y install docker; else sudo yum -y install docker; fi
+                ;;
+              ubuntu)
+                sudo apt-get update -y
+                sudo apt-get install -y docker.io
+                ;;
+              debian)
+                sudo apt-get update -y
+                sudo apt-get install -y docker.io
+                ;;
+              rhel|centos|rocky|almalinux)
+                sudo yum -y install docker
+                ;;
+              *)
+                echo "Unknown distro ($ID). Attempting generic install via package manager...";
+                if command -v dnf >/dev/null 2>&1; then sudo dnf -y install docker || true; fi
+                if command -v yum >/dev/null 2>&1; then sudo yum -y install docker || true; fi
+                if command -v apt-get >/dev/null 2>&1; then sudo apt-get update -y && sudo apt-get install -y docker.io || true; fi
+                ;;
+            esac
+          fi
+          # Ensure service is running
+          if command -v systemctl >/dev/null 2>&1; then
+            sudo systemctl enable docker || true
+            sudo systemctl start docker || true
+          fi
+          sudo docker info >/dev/null 2>&1 || { echo "Docker daemon not responding" >&2; exit 1; }
 
       - name: Show target images (sanity)
         run: |
@@ -46,21 +79,27 @@ jobs:
           echo "Backend tag: $BACKEND_IMAGE:latest"
           echo "Frontend tag: $FRONTEND_IMAGE:latest"
 
+      - name: Log in to Docker Hub (sudo)
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "$DOCKERHUB_TOKEN" | sudo docker login docker.io -u "$DOCKERHUB_USERNAME" --password-stdin
+
       - name: Pull latest images
         shell: bash
         run: |
           set -euo pipefail
-          docker pull "$FRONTEND_IMAGE:latest"
-          docker pull "$BACKEND_IMAGE:latest"
+          sudo docker pull "$FRONTEND_IMAGE:latest"
+          sudo docker pull "$BACKEND_IMAGE:latest"
 
       - name: Stop and remove old containers (if any)
         shell: bash
         run: |
           set -euo pipefail
           for name in ride-frontend ride-backend; do
-            if [ "$(docker ps -aq -f name=^${name}$)" ]; then
+            if [ "$(sudo docker ps -aq -f name=^${name}$)" ]; then
               echo "Stopping and removing $name"
-              docker rm -f "$name" || true
+              sudo docker rm -f "$name" || true
             else
               echo "No existing container named $name"
             fi
@@ -74,7 +113,7 @@ jobs:
             echo "ENV_FILE_PATH is not set. Please configure 'ENV_FILE_PATH' secret to point to your backend .env file on the server." >&2
             exit 1
           fi
-          docker run -d \
+          sudo docker run -d \
             --name ride-backend \
             --restart unless-stopped \
             --env-file "$ENV_FILE_PATH" \
@@ -85,11 +124,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          docker run -d \
+          sudo docker run -d \
             --name ride-frontend \
             --restart unless-stopped \
             -p 5173:80 \
             "$FRONTEND_IMAGE:latest"
 
       - name: Show running containers
-        run: docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}'
+        run: sudo docker ps --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}'

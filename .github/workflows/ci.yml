@@ -24,9 +24,20 @@ jobs:
         run: |
           echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" >> $GITHUB_ENV
           echo "DOCKERHUB_TOKEN=${{ secrets.DOCKERHUB_TOKEN }}" >> $GITHUB_ENV
-          echo "FRONTEND_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/ride-sharing-frontend" >> $GITHUB_ENV
-          echo "BACKEND_IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/ride-sharing-backend" >> $GITHUB_ENV
+          # Optional: set DOCKERHUB_NAMESPACE if you push to an org; falls back to username if not provided
+          ns="${{ secrets.DOCKERHUB_NAMESPACE }}"
+          if [ -z "$ns" ]; then ns="${{ secrets.DOCKERHUB_USERNAME }}"; fi
+          echo "DOCKERHUB_NAMESPACE=$ns" >> $GITHUB_ENV
+          echo "FRONTEND_IMAGE=$ns/ride-sharing-frontend" >> $GITHUB_ENV
+          echo "BACKEND_IMAGE=$ns/ride-sharing-backend" >> $GITHUB_ENV
           echo "FRONTEND_API_BASE_URL=${{ secrets.FRONTEND_API_BASE_URL }}" >> $GITHUB_ENV
+
+      - name: Show target images (sanity)
+        run: |
+          echo "Pushing as user: $DOCKERHUB_USERNAME"
+          echo "Target namespace: $DOCKERHUB_NAMESPACE"
+          echo "Backend tag: $BACKEND_IMAGE:latest"
+          echo "Frontend tag: $FRONTEND_IMAGE:latest"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -37,6 +48,7 @@ jobs:
         with:
           username: ${{ env.DOCKERHUB_USERNAME }}
           password: ${{ env.DOCKERHUB_TOKEN }}
+          registry: docker.io
 
       - name: Derive tags
         id: meta

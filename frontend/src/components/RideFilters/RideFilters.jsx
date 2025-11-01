@@ -27,24 +27,10 @@ const RideFilters = ({ filters, onFilterChange }) => {
                 </select>
             </div>
 
-            <div className="filter-group">
-                <label htmlFor="timeWindow">Time Window</label>
-                <select
-                    id="timeWindow"
-                    value={filters.timeWindow}
-                    onChange={(e) => handleFilterChange('timeWindow', Number(e.target.value))}
-                >
-                    <option value={30}>30 minutes</option>
-                    <option value={60}>1 hour</option>
-                    <option value={120}>2 hours</option>
-                </select>
-            </div>
-
             <button 
                 className="clear-filters"
                 onClick={() => onFilterChange({
-                    distance: 10,
-                    timeWindow: 60
+                    distance: 10
                 })}
             >
                 Clear Filters

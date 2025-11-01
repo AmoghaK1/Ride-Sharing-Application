@@ -1,5 +1,7 @@
 import React from 'react';
 import './RideCard.css';
+import { MapContainer, TileLayer, Marker } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
 
 const RideCard = ({ ride }) => {
     const formatDateTime = (dateString) => {
@@ -46,6 +48,8 @@ const RideCard = ({ ride }) => {
 
     const passengerName = ride.passenger_name || ride.passenger_id || 'Student';
     const pickupAddress = ride.pickup_location?.address || 'Unknown location';
+    const pickupLat = ride.pickup_location?.latitude;
+    const pickupLng = ride.pickup_location?.longitude;
 
     return (
         <div className="ride-card">
@@ -64,6 +68,22 @@ const RideCard = ({ ride }) => {
                     <div className="date">{date}</div>
                     <div className="time">{time}</div>
                 </div>
+
+                {pickupLat && pickupLng && (
+                    <div style={{ height: 160, width: '100%', borderRadius: 6, overflow: 'hidden', border: '1px solid #eee' }}>
+                        <MapContainer
+                            center={[pickupLat, pickupLng]}
+                            zoom={16}
+                            style={{ height: '100%', width: '100%' }}
+                            scrollWheelZoom={false}
+                            attributionControl={false}
+                            zoomControl={false}
+                        >
+                            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                            <Marker position={[pickupLat, pickupLng]} />
+                        </MapContainer>
+                    </div>
+                )}
 
                 {ride.special_requirements && (
                     <div className="special-requirements">

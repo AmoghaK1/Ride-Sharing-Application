@@ -9,8 +9,7 @@ const RiderDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [filters, setFilters] = useState({
-        distance: 10,
-        timeWindow: 60
+        distance: 10
     });
     const navigate = useNavigate();
 
@@ -39,7 +38,8 @@ const RiderDashboard = () => {
                         address: "Current Location" // You might want to reverse geocode this
                     },
                     max_distance: filters.distance,
-                    time_window: filters.timeWindow
+                    // keep a sensible default time window even though it's hidden from UI
+                    time_window: 60
                 })
             });
 

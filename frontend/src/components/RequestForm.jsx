@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Button from './Button';
 import InputField from './InputField';
+import { API_BASE_URL } from '../constants/api';
 
 function RequestForm({ onSubmit }) {
   const [formData, setFormData] = useState({
@@ -15,7 +16,7 @@ function RequestForm({ onSubmit }) {
         const token = localStorage.getItem('token');
         if (!token) return;
 
-        const response = await fetch('http://localhost:8000/auth/profile', {
+        const response = await fetch(`${API_BASE_URL}/auth/profile`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,

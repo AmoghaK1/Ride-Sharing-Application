@@ -12,6 +12,9 @@ class Settings:
     PROJECT_VERSION: str = "1.0.0"
     MONGODB_URL: str = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
     DATABASE_NAME: str = os.getenv("DATABASE_NAME", "ride_sharing_app")
+    # Comma separated list of allowed origins for CORS
+    # Example: http://localhost:5173,http://127.0.0.1:5173,http://YOUR_EC2_IP
+    ALLOWED_ORIGINS: str = os.getenv("ALLOWED_ORIGINS", "*")
 
 @lru_cache()
 def get_settings():

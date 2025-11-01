@@ -5,7 +5,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from app.controllers import ride_controller
 from app.controllers import auth_controller
-from app.config import get_db
+from app.config import get_db, get_settings
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from app.utils.rate_limiter import limiter, rate_limit_middleware
@@ -37,11 +37,20 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         content={"detail": errors},
     )
 
-# Add CORS middleware
+# Add CORS middleware (configurable)
+settings = get_settings()
+origins_raw = settings.ALLOWED_ORIGINS
+if origins_raw.strip() == "*":
+    allow_origins = ["*"]
+    allow_credentials = False  # '*' cannot be used with credentials
+else:
+    allow_origins = [o.strip() for o in origins_raw.split(',') if o.strip()]
+    allow_credentials = True
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],  # Vite dev server
-    allow_credentials=True,
+    allow_origins=allow_origins,
+    allow_credentials=allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
 )

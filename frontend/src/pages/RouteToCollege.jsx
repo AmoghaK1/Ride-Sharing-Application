@@ -35,8 +35,34 @@ const RouteToCollege = () => {
       }
     }, (err) => setError(err.message));
   }, []);
+  const center = start || college;
 
-  const center = start || college || { lat: 12.9716, lng: 77.5946 };
+  const retryGeolocation = () => {
+    setError(null);
+    if (!navigator.geolocation) {
+      setError('Geolocation not supported');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+      const s = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      setStart(s);
+    }, (err) => setError(err.message));
+  };
+
+  // Don't render a map with a hardcoded default center. Require either the
+  // rider's real-time location (`start`) or the configured college location
+  // (`college`) before showing the map. This prevents falling back to the
+  // old Bangalore hardcoded coords.
+  if (!center && !error) {
+    return (
+      <div style={{ padding: 16 }}>
+        Requesting geolocation — please allow location access in your browser.
+        <div style={{ marginTop: 12 }}>
+          <button onClick={retryGeolocation}>Retry</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ height: '100vh', width: '100%' }}>

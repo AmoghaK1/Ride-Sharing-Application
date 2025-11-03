@@ -15,3 +15,8 @@ PyJWT
 
 # Rate limiting
 slowapi
+
+# Network analysis and visualization
+networkx
+matplotlib
+Pillow

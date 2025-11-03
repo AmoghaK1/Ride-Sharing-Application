@@ -5,6 +5,7 @@ import Dashboard from "./pages/Dashboard";
 import HosteliteView from "./pages/HosteliteView";
 import RiderDashboard from "./components/RiderDashboard/RiderDashboard";
 import RouteToCollege from "./pages/RouteToCollege";
+import Network from "./pages/Network";
 
 function App() {
   return (
@@ -16,7 +17,8 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/hostelite" element={<HosteliteView />} />
         <Route path="/rider/dashboard" element={<RiderDashboard />} />
-  <Route path="/rider/route" element={<RouteToCollege />} />
+        <Route path="/rider/route" element={<RouteToCollege />} />
+        <Route path="/rider/network" element={<Network />} />
       </Routes>
     </Router>
   );

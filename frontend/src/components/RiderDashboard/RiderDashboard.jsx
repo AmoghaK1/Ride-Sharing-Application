@@ -128,7 +128,7 @@ const RiderDashboard = () => {
         <div className="rider-dashboard">
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
                 <h1>Available Rides</h1>
-                <button onClick={() => navigate('/rider/route')} style={{padding:'0.5rem 1rem',border:'1px solid #ddd',borderRadius:6,cursor:'pointer',background:'#fff'}}>
+                <button onClick={() => navigate('/rider/network')} style={{padding:'0.5rem 1rem',border:'1px solid #ddd',borderRadius:6,cursor:'pointer',background:'#fff'}}>
                     View Route to College
                 </button>
             </div>

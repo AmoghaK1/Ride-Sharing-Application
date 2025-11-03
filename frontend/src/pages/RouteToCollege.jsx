@@ -71,10 +71,17 @@ const RouteToCollege = () => {
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="&copy; OpenStreetMap contributors" />
   {start && <Marker position={[start.lat, start.lng]} />}
   {college && <Marker position={[college.lat, college.lng]} />}
-        {route && (
+        {route ? (
           <>
             <Polyline positions={route.coords.map(p => [p.lat, p.lng])} color="blue" />
           </>
+        ) : (
+          // If we don't have a computed route from the backend yet,
+          // draw a simple straight line between the rider (start)
+          // and the college marker so the two are visually connected.
+          start && college && (
+            <Polyline positions={[[start.lat, start.lng], [college.lat, college.lng]]} color="#3388ff" dashArray="6" />
+          )
         )}
       </MapContainer>
     </div>

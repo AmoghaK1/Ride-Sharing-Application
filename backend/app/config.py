@@ -15,9 +15,10 @@ class Settings:
     # Comma separated list of allowed origins for CORS
     # Example: http://localhost:5173,http://127.0.0.1:5173,http://YOUR_EC2_IP
     ALLOWED_ORIGINS: str = os.getenv("ALLOWED_ORIGINS", "*")
-    # College destination coordinates (configure these to VIIT coordinates)
-    COLLEGE_LAT: float = float(os.getenv("COLLEGE_LAT", "12.9708"))
-    COLLEGE_LNG: float = float(os.getenv("COLLEGE_LNG", "77.5940"))
+    # College destination coordinates (defaults set to provided VIIT location)
+    # Note: user provided Latitude: 18.46 and Longitude: 73.88 (assumed East, positive)
+    COLLEGE_LAT: float = float(os.getenv("COLLEGE_LAT", "18.46"))
+    COLLEGE_LNG: float = float(os.getenv("COLLEGE_LNG", "73.88"))
 
 @lru_cache()
 def get_settings():

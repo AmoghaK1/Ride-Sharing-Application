@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Polyline, CircleMarker } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Polyline, CircleMarker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
 const RouteToCollege = () => {
@@ -8,6 +8,8 @@ const RouteToCollege = () => {
   const [route, setRoute] = useState(null);
   const [error, setError] = useState(null);
   const [graph, setGraph] = useState(null);
+  const [hostelites, setHostelites] = useState(null);
+  const [showCorridorDemo, setShowCorridorDemo] = useState(false);
 
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -38,6 +40,38 @@ const RouteToCollege = () => {
         const data = await res.json();
         // data.path is [[lat,lng], ...]
         setRoute({ coords: data.path.map(([lat,lng]) => ({ lat, lng })), distance: data.distance_km });
+        
+        // Fetch corridor matching using actual route
+        try {
+          const corridorRes = await fetch('http://localhost:8000/routing/find-corridor-matches', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              route_points: data.path.map(([lat, lng]) => ({ latitude: lat, longitude: lng })),
+              rider_destination: { latitude: clg.latitude, longitude: clg.longitude },
+              corridor_width_meters: 1000
+            })
+          });
+          const corridorData = await corridorRes.json();
+          console.log('Corridor matching response:', corridorData);
+          if (corridorData.success) {
+            setHostelites({
+              matches: corridorData.matches.map(match => ({
+                hostelite_name: match.hostelite_name,
+                hostelite_location: match.location,
+                pickup_point: match.pickup_point,
+                distance_from_route_meters: match.distance_from_route,
+                pickup_order: match.pickup_order,
+                estimated_pickup_time_minutes: match.estimated_time,
+                phone: match.hostelite_id.includes('001') ? '+91-9876543210' : 
+                       match.hostelite_id.includes('002') ? '+91-9876543211' : '+91-9876543212'
+              })),
+              route: data.path.map(([lat, lng]) => ({ lat, lng }))
+            });
+          }
+        } catch (e) {
+          console.warn('Failed to load hostelites for real route', e);
+        }
       } catch (e) {
         setError(e.message);
       }
@@ -75,6 +109,51 @@ const RouteToCollege = () => {
   return (
     <div style={{ height: '100vh', width: '100%' }}>
       {error && (<div style={{ padding: 12, color: '#c00' }}>Error: {error}</div>)}
+      
+      {/* Corridor Demo Toggle */}
+      <div style={{ 
+        position: 'absolute', 
+        top: 10, 
+        right: 10, 
+        zIndex: 1000, 
+        background: 'white', 
+        padding: '10px', 
+        borderRadius: '8px',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+      }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+          <input 
+            type="checkbox" 
+            checked={showCorridorDemo} 
+            onChange={(e) => setShowCorridorDemo(e.target.checked)}
+          />
+          <span style={{ fontSize: '14px', fontWeight: '500' }}>
+            🎯 Show Corridor Matching Demo
+          </span>
+        </label>
+        {hostelites && showCorridorDemo && (
+          <div style={{ marginTop: '8px', fontSize: '12px', color: '#666' }}>
+            Found {hostelites.matches.length} hostelites in corridor
+          </div>
+        )}
+        <button 
+          style={{
+            marginTop: '8px',
+            padding: '6px 12px',
+            background: '#28a745',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            fontSize: '12px',
+            cursor: 'pointer',
+            width: '100%'
+          }}
+          onClick={() => window.open('/corridor-demo', '_blank')}
+        >
+          🎯 Open Full Demo
+        </button>
+      </div>
+      
       <MapContainer center={[center.lat, center.lng]} zoom={15} style={{ height: '100%', width: '100%' }}>
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="&copy; OpenStreetMap contributors" />
 
@@ -106,6 +185,78 @@ const RouteToCollege = () => {
           start && college && (
             <Polyline positions={[[start.lat, start.lng], [college.lat, college.lng]]} color="#3388ff" dashArray="6" />
           )
+        )}
+
+        {/* Corridor Matching Demo - Show Hostelites */}
+        {showCorridorDemo && hostelites && hostelites.matches && hostelites.matches.map((match, idx) => (
+          <div key={`hostelite-${idx}`}>
+            {/* Hostelite Location Marker */}
+            <CircleMarker 
+              center={[match.hostelite_location.lat, match.hostelite_location.lng]} 
+              radius={10} 
+              color="#28a745" 
+              fillColor="#28a745" 
+              fillOpacity={0.8}
+              weight={3}
+            >
+              <Popup>
+                <div style={{ minWidth: '200px' }}>
+                  <h4 style={{ margin: '0 0 8px 0', color: '#28a745' }}>
+                    🧑‍🎓 {match.hostelite_name}
+                  </h4>
+                  <div style={{ fontSize: '13px', lineHeight: '1.4' }}>
+                    <div><strong>📍 Pickup Order:</strong> #{match.pickup_order}</div>
+                    <div><strong>📏 Distance from Route:</strong> {match.distance_from_route_meters}m</div>
+                    <div><strong>⏰ Estimated Time:</strong> +{match.estimated_pickup_time_minutes} min</div>
+                    <div><strong>📞 Phone:</strong> {match.phone}</div>
+                    <div style={{ marginTop: '8px', padding: '4px', background: '#f8f9fa', borderRadius: '4px', fontSize: '12px' }}>
+                      🎯 Found by Geometric Corridor Matching Algorithm
+                    </div>
+                  </div>
+                </div>
+              </Popup>
+            </CircleMarker>
+
+            {/* Pickup Point Marker */}
+            <CircleMarker 
+              center={[match.pickup_point.lat, match.pickup_point.lng]} 
+              radius={6} 
+              color="#ffc107" 
+              fillColor="#ffc107" 
+              fillOpacity={0.9}
+              weight={2}
+            >
+              <Popup>
+                <div>
+                  <strong>🚩 Pickup Point</strong><br />
+                  for {match.hostelite_name}<br />
+                  <small>Closest point on route</small>
+                </div>
+              </Popup>
+            </CircleMarker>
+
+            {/* Line connecting hostelite to pickup point */}
+            <Polyline 
+              positions={[
+                [match.hostelite_location.lat, match.hostelite_location.lng],
+                [match.pickup_point.lat, match.pickup_point.lng]
+              ]} 
+              color="#28a745" 
+              weight={2} 
+              dashArray="5,5"
+              opacity={0.7}
+            />
+          </div>
+        ))}
+
+        {/* Show demo route if corridor demo is active */}
+        {showCorridorDemo && hostelites && hostelites.route && (
+          <Polyline 
+            positions={hostelites.route.map(p => [p.lat, p.lng])} 
+            color="#e74c3c" 
+            weight={4} 
+            opacity={0.8}
+          />
         )}
       </MapContainer>
     </div>

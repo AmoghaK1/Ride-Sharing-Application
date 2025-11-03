@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from app.services.routing_service import RoutingService
+from app.services.corridor_matching_service import simulate_corridor_matching, GeometricCorridorMatcher, Point, Hostelite
 from app.config import get_settings
 import os
 import httpx
@@ -25,6 +26,46 @@ class ShortestPathResponse(BaseModel):
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data')
 settings = get_settings()
 routing_service = RoutingService(DATA_DIR, college_lat=settings.COLLEGE_LAT, college_lng=settings.COLLEGE_LNG)
+
+def generate_realistic_hostelites(route_points: list[Point], destination: Point) -> list[Hostelite]:
+    """Generate hostelites near the actual route path"""
+    import random
+    
+    hostelites = []
+    names = ["Rahul Sharma", "Priya Patel", "Arjun Kumar", "Sneha Gupta", "Amit Singh"]
+    phones = ["+91-9876543210", "+91-9876543211", "+91-9876543212", "+91-9876543213", "+91-9876543214"]
+    
+    # Work with routes of any length >= 3 points
+    if len(route_points) >= 3:
+        # For shorter routes, just use available points
+        if len(route_points) <= 6:
+            indices = list(range(1, len(route_points) - 1))  # Exclude start/end
+        else:
+            indices = [
+                len(route_points) // 4,      # 25% along route
+                len(route_points) // 2,      # 50% along route  
+                3 * len(route_points) // 4   # 75% along route
+            ]
+        
+        for i, route_idx in enumerate(indices[:3]):  # Max 3 hostelites
+            if route_idx < len(route_points) and route_idx > 0:
+                base_point = route_points[route_idx]
+                
+                # Add random offset within 500m of route point
+                lat_offset = random.uniform(-0.003, 0.003)  # ~300m at Pune latitude
+                lng_offset = random.uniform(-0.003, 0.003)
+                
+                hostelite = Hostelite(
+                    id=f"h{i+1:03d}",
+                    name=names[i % len(names)],
+                    lat=base_point.lat + lat_offset,
+                    lng=base_point.lng + lng_offset,
+                    destination=destination,
+                    phone=phones[i % len(phones)]
+                )
+                hostelites.append(hostelite)
+    
+    return hostelites
 
 @router.post("/shortest-path", response_model=ShortestPathResponse)
 async def shortest_path(req: ShortestPathRequest):
@@ -77,6 +118,100 @@ async def shortest_path_osrm(req: ShortestPathRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+@router.get("/simulate-corridor-matching")
+async def simulate_corridor_matching_api():
+    """
+    Simulate the Geometric Corridor Matching Algorithm with dummy data
+    Shows how the algorithm finds hostelites along a rider's route
+    """
+    try:
+        result = simulate_corridor_matching()
+        return {
+            "success": True,
+            "algorithm_name": "Geometric Corridor Matching with Greedy Selection",
+            "description": "Point-to-Path Proximity Algorithm with Greedy Optimization",
+            "data": {
+                "route_points": len(result["route"]),
+                "total_matches": len(result["all_matches"]),
+                "selected_matches": len(result["selected_matches"]),
+                "matches": [
+                    {
+                        "hostelite_name": match.hostelite.name,
+                        "hostelite_location": {
+                            "lat": match.hostelite.lat,
+                            "lng": match.hostelite.lng
+                        },
+                        "distance_from_route_meters": round(match.distance_from_route, 1),
+                        "pickup_point": {
+                            "lat": match.pickup_point.lat,
+                            "lng": match.pickup_point.lng
+                        },
+                        "route_index": match.route_index,
+                        "pickup_order": match.pickup_order,
+                        "estimated_pickup_time_minutes": match.estimated_pickup_time_minutes,
+                        "phone": match.hostelite.phone
+                    }
+                    for match in result["selected_matches"]
+                ],
+                "route": [
+                    {"lat": point.lat, "lng": point.lng} 
+                    for point in result["route"]
+                ]
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Simulation failed: {str(e)}")
+
+class CorridorMatchRequest(BaseModel):
+    route_points: list[Location]
+    rider_destination: Location
+    corridor_width_meters: float = Field(default=1000, ge=100, le=5000)
+
+@router.post("/find-corridor-matches")
+async def find_corridor_matches(req: CorridorMatchRequest):
+    """
+    Find hostelites within a corridor around the rider's route
+    Uses the Geometric Corridor Matching Algorithm
+    """
+    try:
+        # Convert to internal format
+        route = [Point(lat=loc.latitude, lng=loc.longitude) for loc in req.route_points]
+        destination = Point(lat=req.rider_destination.latitude, lng=req.rider_destination.longitude)
+        
+        # Create matcher with specified corridor width
+        matcher = GeometricCorridorMatcher(corridor_width_meters=req.corridor_width_meters)
+        
+        # Generate realistic hostelites near the actual route
+        college_dest = Point(lat=req.rider_destination.latitude, lng=req.rider_destination.longitude)
+        dummy_hostelites = generate_realistic_hostelites(route, college_dest)
+        
+        # Find matches
+        matches = matcher.find_corridor_matches(route, dummy_hostelites, destination)
+        optimal_matches = matcher.select_optimal_matches(matches, max_capacity=3)
+        
+        return {
+            "success": True,
+            "corridor_width_meters": req.corridor_width_meters,
+            "total_hostelites_checked": len(dummy_hostelites),
+            "matches_found": len(matches),
+            "optimal_matches_selected": len(optimal_matches),
+            "matches": [
+                {
+                    "hostelite_id": match.hostelite.id,
+                    "hostelite_name": match.hostelite.name,
+                    "location": {"lat": match.hostelite.lat, "lng": match.hostelite.lng},
+                    "distance_from_route": round(match.distance_from_route, 1),
+                    "pickup_point": {"lat": match.pickup_point.lat, "lng": match.pickup_point.lng},
+                    "pickup_order": match.pickup_order,
+                    "estimated_time": match.estimated_pickup_time_minutes
+                }
+                for match in optimal_matches
+            ]
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Matching failed: {str(e)}")
 
 @router.get("/graph")
 async def campus_graph():

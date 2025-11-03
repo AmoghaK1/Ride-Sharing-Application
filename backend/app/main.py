@@ -21,8 +21,8 @@ app.middleware("http")(rate_limit_middleware)
 # Add exception handler for validation errors
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    print(f"❌ Validation Error: {exc.errors()}")
-    print(f"❌ Body received: {exc.body}")
+    print(f"Validation Error: {exc.errors()}")
+    print(f" Body received: {exc.body}")
     
     # Format errors in a user-friendly way
     errors = []
@@ -63,7 +63,7 @@ async def startup_event():
         # Initialize database connection
         await get_db()
     except Exception as e:
-        print(f"❌ MongoDB connection failed: {e}")
+        print(f" MongoDB connection failed: {e}")
 
 # Register controllers (routers)
 app.include_router(ride_controller.router)
@@ -72,4 +72,4 @@ app.include_router(routing_controller.router)
 
 @app.get("/")
 def root():
-    return {"message": "Backend is running 🚀"}
+    return {"message": "Backend is running "}

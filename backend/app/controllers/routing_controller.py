@@ -45,3 +45,20 @@ async def shortest_path(req: ShortestPathRequest):
 async def college_location():
     """Return configured college lat/lng so clients can show a marker."""
     return {"latitude": settings.COLLEGE_LAT, "longitude": settings.COLLEGE_LNG}
+
+
+@router.get("/graph")
+async def campus_graph():
+    """Return the campus graph (nodes and edges) so clients can visualize the network."""
+    graph_path = os.path.join(DATA_DIR, 'campus_graph.json')
+    if not os.path.exists(graph_path):
+        raise HTTPException(status_code=404, detail="Campus graph not found")
+    try:
+        with open(graph_path, 'r', encoding='utf-8') as f:
+            data = f.read()
+        # return raw JSON parsed by FastAPI
+        from fastapi.responses import JSONResponse
+        import json as _json
+        return JSONResponse(content=_json.loads(data))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 from app.services.routing_service import RoutingService
 from app.config import get_settings
 import os
+import httpx
 
 router = APIRouter(prefix="/routing", tags=["Routing"])
 
@@ -45,6 +46,36 @@ async def shortest_path(req: ShortestPathRequest):
 async def college_location():
     """Return configured college lat/lng so clients can show a marker."""
     return {"latitude": settings.COLLEGE_LAT, "longitude": settings.COLLEGE_LNG}
+
+
+@router.post("/shortest-path-osrm")
+async def shortest_path_osrm(req: ShortestPathRequest):
+    """Compute a driving route using the public OSRM service and return a geojson-style path list [[lat,lng], ...]."""
+    try:
+        start_lat = req.start_location.latitude
+        start_lng = req.start_location.longitude
+        end_lat = settings.COLLEGE_LAT
+        end_lng = settings.COLLEGE_LNG
+
+        coords = f"{start_lng},{start_lat};{end_lng},{end_lat}"
+        url = f"https://router.project-osrm.org/route/v1/driving/{coords}"
+        params = {"overview": "full", "geometries": "geojson"}
+
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(url, params=params)
+        resp.raise_for_status()
+        data = resp.json()
+        if not data.get("routes"):
+            raise HTTPException(status_code=404, detail="No route returned from OSRM")
+        route = data["routes"][0]
+        distance_km = route.get("distance", 0) / 1000.0
+        coords_lnglat = route["geometry"]["coordinates"]  # [[lng,lat], ...]
+        path = [[lat, lng] for lng, lat in coords_lnglat]
+        return {"start_node": None, "end_node": None, "distance_km": round(distance_km, 3), "nodes": [], "path": path}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/graph")

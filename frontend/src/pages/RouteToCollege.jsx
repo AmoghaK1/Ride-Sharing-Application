@@ -29,7 +29,7 @@ const RouteToCollege = () => {
           // non-critical: graph visualization optional
           console.warn('Failed to load campus graph', e);
         }
-        const res = await fetch('http://localhost:8000/routing/shortest-path', {
+        const res = await fetch('http://localhost:8000/routing/shortest-path-osrm', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ start_location: { latitude: s.lat, longitude: s.lng } })

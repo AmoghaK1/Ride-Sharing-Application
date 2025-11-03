@@ -16,6 +16,9 @@ PyJWT
 # Rate limiting
 slowapi
 
+# HTTP client
+httpx>=0.24.0
+
 # Network analysis and visualization
 networkx
 matplotlib

@@ -60,7 +60,7 @@ const RiderDashboard = () => {
                 const mockRide = {
                     id: 'mock-1',
                     passenger_id: 'student123',
-                    passenger_name: 'Asha Kumar',
+                    passenger_name: 'Manas Bhise',
                     pickup_location: { address: 'Hostel A, Block 3', latitude: position.coords.latitude, longitude: position.coords.longitude },
                     dropoff_location: { address: 'College Main Gate', latitude: position.coords.latitude + 0.01, longitude: position.coords.longitude + 0.01 },
                     pickup_time: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
@@ -84,7 +84,7 @@ const RiderDashboard = () => {
                 const mockRide = {
                     id: 'mock-1',
                     passenger_id: 'student123',
-                    passenger_name: 'Asha Kumar',
+                    passenger_name: 'Manas Bhise',
                     pickup_location: { address: 'Hostel A, Block 3' },
                     dropoff_location: { address: 'College Main Gate' },
                     pickup_time: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
@@ -127,7 +127,7 @@ const RiderDashboard = () => {
     return (
         <div className="rider-dashboard">
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                <h1>Available Rides</h1>
+                <h1>Rider Dashboard</h1>
                 <button onClick={() => navigate('/rider/route')} style={{padding:'0.5rem 1rem',border:'1px solid #ddd',borderRadius:6,cursor:'pointer',background:'#fff'}}>
                     View Route to College
                 </button>

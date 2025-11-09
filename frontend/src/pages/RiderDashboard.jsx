@@ -67,10 +67,10 @@ const RiderDashboard = () => {
               value={filters.maxDistance}
               onChange={handleFilterChange}
             >
-              <option value="5">5 km</option>
-              <option value="10">10 km</option>
-              <option value="20">20 km</option>
-              <option value="50">50 km</option>
+              <option value="5">100 m</option>
+              <option value="10">200 m</option>
+              <option value="20">500 m</option>
+              <option value="50">1 km</option>
             </select>
           </div>
           <div className="filter-group">
@@ -81,9 +81,9 @@ const RiderDashboard = () => {
               value={filters.timeWindow}
               onChange={handleFilterChange}
             >
-              <option value="30">30 minutes</option>
-              <option value="60">1 hour</option>
-              <option value="120">2 hours</option>
+              <option value="30">2 minutes</option>
+              <option value="60">5 minutes</option>
+              <option value="120">10 minutes</option>
             </select>
           </div>
         </div>

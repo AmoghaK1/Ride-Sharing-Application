@@ -53,7 +53,7 @@ function Login() {
         display: "flex", flexDirection: "column", width: "300px", gap: "10px",
         padding: "20px", border: "1px solid #ccc", borderRadius: "10px"
       }}>
-        <h2 style={{ textAlign: "center" }}>Login</h2>
+        <h2 style={{ textAlign: "center" }}>Welcome! Please Login to Continue</h2>
         <input
           type="email"
           placeholder="Enter email"

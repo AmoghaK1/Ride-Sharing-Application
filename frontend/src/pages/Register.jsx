@@ -119,6 +119,7 @@ function Register() {
     setCurrentPage(FORM_PAGES.BASIC_INFO);
   };
 
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateDetailedInfo()) {

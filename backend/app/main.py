@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 from app.controllers import ride_controller
 from app.controllers import auth_controller
 from app.controllers import routing_controller
+from app.controllers import network_controller
 from app.config import get_db, get_settings
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -21,8 +22,8 @@ app.middleware("http")(rate_limit_middleware)
 # Add exception handler for validation errors
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    print(f"❌ Validation Error: {exc.errors()}")
-    print(f"❌ Body received: {exc.body}")
+    print(f"Validation Error: {exc.errors()}")
+    print(f" Body received: {exc.body}")
     
     # Format errors in a user-friendly way
     errors = []
@@ -63,13 +64,14 @@ async def startup_event():
         # Initialize database connection
         await get_db()
     except Exception as e:
-        print(f"❌ MongoDB connection failed: {e}")
+        print(f" MongoDB connection failed: {e}")
 
 # Register controllers (routers)
 app.include_router(ride_controller.router)
 app.include_router(auth_controller.router)
 app.include_router(routing_controller.router)
+app.include_router(network_controller.router)
 
 @app.get("/")
 def root():
-    return {"message": "Backend is running 🚀"}
+    return {"message": "Backend is running "}

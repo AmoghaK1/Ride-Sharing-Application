@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Hostelites Map Preview</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; }
+        #map { height: 100vh; }
+        .info-panel {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            max-width: 300px;
+        }
+        .hostelite-item {
+            margin: 8px 0;
+            padding: 8px;
+            background: #f0f8f0;
+            border-left: 4px solid #28a745;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="info-panel">
+        <h3>🎯 Corridor Matching Demo</h3>
+        <div id="info">Loading simulation...</div>
+    </div>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize map
+        const map = L.map('map').setView([18.5300, 73.8400], 13);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Custom icons
+        const hosteliteIcon = L.divIcon({
+            className: 'custom-div-icon',
+            html: `<div style="
+                width: 20px; 
+                height: 20px; 
+                border-radius: 50%; 
+                background: #28a745; 
+                border: 3px solid white; 
+                box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-weight: bold;
+                font-size: 12px;
+            ">👥</div>`,
+            iconSize: [26, 26],
+            iconAnchor: [13, 13]
+        });
+
+        const pickupIcon = L.divIcon({
+            className: 'custom-div-icon',
+            html: `<div style="
+                width: 16px; 
+                height: 16px; 
+                border-radius: 50%; 
+                background: #ffc107; 
+                border: 2px solid white; 
+                box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            "></div>`,
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+        });
+
+        // Test with realistic Pune route coordinates (matching your map)
+        const testRoute = [
+            {latitude: 18.5204, longitude: 73.8567},  // Starting point
+            {latitude: 18.5180, longitude: 73.8520},  // Point 1
+            {latitude: 18.5150, longitude: 73.8480},  // Point 2
+            {latitude: 18.5120, longitude: 73.8440},  // Point 3
+            {latitude: 18.5100, longitude: 73.8400},  // Point 4
+            {latitude: 18.5080, longitude: 73.8360},  // Point 5
+            {latitude: 18.5060, longitude: 73.8320},  // End point (college)
+        ];
+        
+        const testData = {
+            route_points: testRoute,
+            rider_destination: {latitude: 18.5060, longitude: 73.8320},
+            corridor_width_meters: 1000
+        };
+
+        // Fetch and display realistic simulation
+        fetch('http://localhost:8000/routing/find-corridor-matches', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(testData)
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log('API Response:', data);
+                if (!data.success) {
+                    document.getElementById('info').innerHTML = 'Simulation failed';
+                    return;
+                }
+
+                // Adapt to new API response format
+                const simulationData = {
+                    route_points: testRoute.length,
+                    total_matches: data.matches_found,
+                    selected_matches: data.optimal_matches_selected,
+                    matches: data.matches.map(match => ({
+                        hostelite_name: match.hostelite_name,
+                        hostelite_location: match.location,
+                        pickup_point: match.pickup_point,
+                        distance_from_route_meters: match.distance_from_route,
+                        pickup_order: match.pickup_order,
+                        estimated_pickup_time_minutes: match.estimated_time,
+                        phone: match.hostelite_id.includes('001') ? '+91-9876543210' :
+                               match.hostelite_id.includes('002') ? '+91-9876543211' : '+91-9876543212'
+                    })),
+                    route: testRoute.map(p => ({lat: p.latitude, lng: p.longitude}))
+                };
+                
+                // Update info panel
+                document.getElementById('info').innerHTML = `
+                    <strong>Algorithm:</strong> Geometric Corridor Matching<br>
+                    <strong>Route Points:</strong> ${simulationData.route_points}<br>
+                    <strong>Matches Found:</strong> ${simulationData.total_matches}<br>
+                    <strong>Selected:</strong> ${simulationData.selected_matches}
+                    <div style="margin-top: 10px;">
+                        ${simulationData.matches.map(match => `
+                            <div class="hostelite-item">
+                                <strong>#${match.pickup_order} ${match.hostelite_name}</strong><br>
+                                📏 ${match.distance_from_route_meters}m from route<br>
+                                ⏰ +${match.estimated_time} min
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+
+                // Draw route
+                const routeCoords = simulationData.route.map(p => [p.lat, p.lng]);
+                L.polyline(routeCoords, {
+                    color: '#3498db',
+                    weight: 6,
+                    opacity: 0.8
+                }).addTo(map).bindPopup('🛣️ Demo Route: Home to College');
+
+                // Add start and end markers
+                L.marker([simulationData.route[0].lat, simulationData.route[0].lng])
+                    .addTo(map)
+                    .bindPopup('🏠 <strong>Start: Rider\'s Home</strong>');
+
+                L.marker([
+                    simulationData.route[simulationData.route.length-1].lat, 
+                    simulationData.route[simulationData.route.length-1].lng
+                ]).addTo(map).bindPopup('🎓 <strong>End: College</strong>');
+
+                // Add hostelites
+                simulationData.matches.forEach((match, idx) => {
+                    // Hostelite location
+                    L.marker([match.hostelite_location.lat, match.hostelite_location.lng], {
+                        icon: hosteliteIcon
+                    }).addTo(map).bindPopup(`
+                        <div style="min-width: 200px;">
+                            <h4 style="margin: 0 0 8px 0; color: #28a745;">
+                                🧑‍🎓 ${match.hostelite_name}
+                            </h4>
+                            <div>
+                                <strong>📍 Pickup Order:</strong> #${match.pickup_order}<br>
+                                <strong>📏 Distance from Route:</strong> ${match.distance_from_route_meters}m<br>
+                                <strong>⏰ Pickup Time:</strong> +${match.estimated_pickup_time_minutes} min<br>
+                                <strong>📞 Phone:</strong> ${match.phone}
+                            </div>
+                            <div style="margin-top: 8px; padding: 4px; background: #e8f4fd; border-radius: 4px; font-size: 12px;">
+                                🎯 Found by Geometric Corridor Matching Algorithm
+                            </div>
+                        </div>
+                    `);
+
+                    // Pickup point
+                    L.marker([match.pickup_point.lat, match.pickup_point.lng], {
+                        icon: pickupIcon
+                    }).addTo(map).bindPopup(`
+                        <strong>🚩 Pickup Point</strong><br>
+                        for ${match.hostelite_name}<br>
+                        <small>Closest point on route</small>
+                    `);
+
+                    // Connection line
+                    L.polyline([
+                        [match.hostelite_location.lat, match.hostelite_location.lng],
+                        [match.pickup_point.lat, match.pickup_point.lng]
+                    ], {
+                        color: '#28a745',
+                        weight: 2,
+                        dashArray: '8,4',
+                        opacity: 0.7
+                    }).addTo(map);
+                });
+
+                // Fit map to show all points
+                const allPoints = [
+                    ...routeCoords,
+                    ...simulationData.matches.map(m => [m.hostelite_location.lat, m.hostelite_location.lng])
+                ];
+                map.fitBounds(allPoints, { padding: [20, 20] });
+            })
+            .catch(error => {
+                document.getElementById('info').innerHTML = 'Error: ' + error.message;
+                console.error('Error:', error);
+            });
+    </script>
+</body>
+</html>

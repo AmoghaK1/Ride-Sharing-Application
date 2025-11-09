@@ -2,6 +2,7 @@ import React from 'react';
 import './RideCard.css';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import { fetchWithFallback } from '../../constants/api';
 
 const RideCard = ({ ride }) => {
     const formatDateTime = (dateString) => {
@@ -23,7 +24,7 @@ const RideCard = ({ ride }) => {
 
     const handleAcceptRide = async () => {
         try {
-            const response = await fetch(`http://localhost:8000/rides/${ride.id}`, {
+            const response = await fetchWithFallback(`/rides/${ride.id}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import RideFilters from '../RideFilters/RideFilters';
 import HostelitesList from '../HostelitesList/HostelitesList';
+import { fetchWithFallback } from '../../constants/api';
 import './RiderDashboard.css';
 
 const RiderDashboard = () => {
@@ -25,7 +26,7 @@ const RiderDashboard = () => {
             // Get user's location
             const position = await getCurrentPosition();
             
-            const response = await fetch('http://localhost:8000/rides/nearby', {
+            const response = await fetchWithFallback('/rides/nearby', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

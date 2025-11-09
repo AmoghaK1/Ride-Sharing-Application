@@ -7,7 +7,7 @@ import {
   DEFAULT_VALUES, 
   FORM_PAGES 
 } from "../constants/registerConstants";
-import { API_BASE_URL } from "../constants/api";
+import { fetchWithFallback } from "../constants/api";
 
 function Register() {
   const navigate = useNavigate();
@@ -141,7 +141,7 @@ function Register() {
           agree_to_terms: formData.agreeToTerms
         };
 
-        const response = await fetch(`${API_BASE_URL}/auth/register`, {
+        const response = await fetchWithFallback('/auth/register', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

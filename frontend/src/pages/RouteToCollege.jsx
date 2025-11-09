@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Polyline, CircleMarker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { API_BASE_URL } from '../constants/api';
+import { fetchWithFallback } from '../constants/api';
 
 const RouteToCollege = () => {
   const [start, setStart] = useState(null);
@@ -18,17 +18,17 @@ const RouteToCollege = () => {
       setStart(s);
       try {
         // Get configured college location
-        const clg = await fetch(`${API_BASE_URL}/routing/college-location`).then(r => r.json());
+        const clg = await fetchWithFallback('/routing/college-location').then(r => r.json());
         setCollege({ lat: clg.latitude, lng: clg.longitude });
         // fetch campus graph for visualization (nodes + edges)
         try {
-          const g = await fetch(`${API_BASE_URL}/routing/graph`).then(r => r.json());
+          const g = await fetchWithFallback('/routing/graph').then(r => r.json());
           setGraph(g);
         } catch (e) {
           // non-critical: graph visualization optional
           console.warn('Failed to load campus graph', e);
         }
-        const res = await fetch(`${API_BASE_URL}/routing/shortest-path-osrm`, {
+        const res = await fetchWithFallback('/routing/shortest-path-osrm', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ start_location: { latitude: s.lat, longitude: s.lng } })
@@ -40,7 +40,7 @@ const RouteToCollege = () => {
         
         // Fetch corridor matching using actual route
         try {
-          const corridorRes = await fetch(`${API_BASE_URL}/routing/find-corridor-matches`, {
+          const corridorRes = await fetchWithFallback('/routing/find-corridor-matches', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

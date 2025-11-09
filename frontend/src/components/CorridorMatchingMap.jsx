@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Polyline, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import { fetchWithFallback } from '../constants/api';
 import './CorridorMatchingMap.css';
 
 const CorridorMatchingMap = () => {
@@ -13,7 +14,7 @@ const CorridorMatchingMap = () => {
     setError(null);
     
     try {
-      const response = await fetch('http://localhost:8000/routing/simulate-corridor-matching');
+      const response = await fetchWithFallback('/routing/simulate-corridor-matching');
       const data = await response.json();
       
       if (data.success) {

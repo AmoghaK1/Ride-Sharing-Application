@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { fetchWithFallback } from '../constants/api';
 import './CorridorMatchingDemo.css';
 
 /**
@@ -36,7 +37,7 @@ const CorridorMatchingDemo = () => {
 
     const fetchSimulationData = async () => {
         try {
-            const response = await fetch('/api/routing/simulate-corridor-matching');
+            const response = await fetchWithFallback('/routing/simulate-corridor-matching');
             const data = await response.json();
             setSimulationData(data);
             setLoading(false);

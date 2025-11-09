@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import AppBar from '../components/AppBar';
+import { fetchWithFallback, API_BASE_URL, API_FALLBACK_URL } from '../constants/api';
 import './Network.css';
 
 const Network = () => {
@@ -13,7 +14,7 @@ const Network = () => {
 
   const fetchNetworkInfo = async () => {
     try {
-      const response = await fetch('http://localhost:8000/rider/network/info');
+      const response = await fetchWithFallback('/rider/network/info');
       if (!response.ok) {
         throw new Error('Failed to fetch network info');
       }
@@ -80,12 +81,17 @@ const Network = () => {
         <div className="network-visualization">
           <div className="graph-container">
             <img 
-              src="http://localhost:8000/rider/network" 
+              src={`${API_BASE_URL}/rider/network`}
               alt="Pune Area Network Graph"
               className="network-graph"
               onError={(e) => {
-                e.target.style.display = 'none';
-                setError('Failed to load network graph');
+                // Try fallback on error
+                if (e.target.src === `${API_BASE_URL}/rider/network`) {
+                  e.target.src = `${API_FALLBACK_URL}/rider/network`;
+                } else {
+                  e.target.style.display = 'none';
+                  setError('Failed to load network graph');
+                }
               }}
             />
           </div>

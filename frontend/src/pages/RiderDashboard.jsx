@@ -23,10 +23,26 @@ const RiderDashboard = () => {
           });
         },
         (error) => {
-          console.error('Error getting location:', error);
-          // Set a default location (e.g., city center) or show an error message
+          console.error('Error getting location (geolocation not available on HTTP):', error);
+          // Set a default location for HTTP sites (replace with your campus coordinates)
+          setCurrentLocation({
+            latitude: 18.52,
+            longitude: 73.91,
+            address: 'Default Location'
+          });
+        },
+        {
+          timeout: 5000,
+          maximumAge: 0
         }
       );
+    } else {
+      // Browser doesn't support geolocation, use default
+      setCurrentLocation({
+        latitude: 18.52,
+        longitude: 73.91,
+        address: 'Default Location'
+      });
     }
   }, []);
 

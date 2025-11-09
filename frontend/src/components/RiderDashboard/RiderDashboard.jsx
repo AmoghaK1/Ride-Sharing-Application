@@ -109,9 +109,32 @@ const RiderDashboard = () => {
     const getCurrentPosition = () => {
         return new Promise((resolve, reject) => {
             if (!navigator.geolocation) {
-                reject(new Error('Geolocation is not supported by your browser'));
+                // Fallback to default location (e.g., college campus)
+                console.warn('Geolocation not supported, using default location');
+                resolve({
+                    coords: {
+                        latitude: 18.52,  // Replace with your campus/default location
+                        longitude: 73.91
+                    }
+                });
             } else {
-                navigator.geolocation.getCurrentPosition(resolve, reject);
+                navigator.geolocation.getCurrentPosition(
+                    resolve,
+                    (error) => {
+                        // If geolocation fails (e.g., HTTP site), use default location
+                        console.warn('Geolocation failed, using default location:', error.message);
+                        resolve({
+                            coords: {
+                                latitude: 28.5449,  // Replace with your campus/default location
+                                longitude: 77.1926
+                            }
+                        });
+                    },
+                    {
+                        timeout: 5000,
+                        maximumAge: 0
+                    }
+                );
             }
         });
     };

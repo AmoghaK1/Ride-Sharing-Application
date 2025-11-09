@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Polyline, CircleMarker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import { API_BASE_URL } from '../constants/api';
 
 const RouteToCollege = () => {
   const [start, setStart] = useState(null);
@@ -12,26 +13,22 @@ const RouteToCollege = () => {
   const [showCorridorDemo, setShowCorridorDemo] = useState(false);
 
   useEffect(() => {
-    if (!navigator.geolocation) {
-      setError('Geolocation not supported');
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(async (pos) => {
+    const initializeLocation = async (pos) => {
       const s = { lat: pos.coords.latitude, lng: pos.coords.longitude };
       setStart(s);
       try {
         // Get configured college location
-        const clg = await fetch('http://localhost:8000/routing/college-location').then(r => r.json());
+        const clg = await fetch(`${API_BASE_URL}/routing/college-location`).then(r => r.json());
         setCollege({ lat: clg.latitude, lng: clg.longitude });
         // fetch campus graph for visualization (nodes + edges)
         try {
-          const g = await fetch('http://localhost:8000/routing/graph').then(r => r.json());
+          const g = await fetch(`${API_BASE_URL}/routing/graph`).then(r => r.json());
           setGraph(g);
         } catch (e) {
           // non-critical: graph visualization optional
           console.warn('Failed to load campus graph', e);
         }
-        const res = await fetch('http://localhost:8000/routing/shortest-path-osrm', {
+        const res = await fetch(`${API_BASE_URL}/routing/shortest-path-osrm`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ start_location: { latitude: s.lat, longitude: s.lng } })
@@ -43,7 +40,7 @@ const RouteToCollege = () => {
         
         // Fetch corridor matching using actual route
         try {
-          const corridorRes = await fetch('http://localhost:8000/routing/find-corridor-matches', {
+          const corridorRes = await fetch(`${API_BASE_URL}/routing/find-corridor-matches`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -75,20 +72,46 @@ const RouteToCollege = () => {
       } catch (e) {
         setError(e.message);
       }
-    }, (err) => setError(err.message));
+    };
+
+    if (!navigator.geolocation) {
+      // Use default location if geolocation not supported
+      console.warn('Geolocation not supported, using default location');
+      initializeLocation({ coords: { latitude: 28.5449, longitude: 77.1926 } });
+    } else {
+      navigator.geolocation.getCurrentPosition(
+        initializeLocation,
+        (err) => {
+          console.warn('Geolocation failed (HTTP site?), using default location:', err.message);
+          // Use default location on error (e.g., HTTP site)
+          initializeLocation({ coords: { latitude: 28.5449, longitude: 77.1926 } });
+        },
+        {
+          timeout: 5000,
+          maximumAge: 0
+        }
+      );
+    }
   }, []);
   const center = start || college;
 
   const retryGeolocation = () => {
     setError(null);
     if (!navigator.geolocation) {
-      setError('Geolocation not supported');
+      console.warn('Geolocation not supported, using default location');
+      setStart({ lat: 28.5449, lng: 77.1926 });
       return;
     }
-    navigator.geolocation.getCurrentPosition(async (pos) => {
-      const s = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-      setStart(s);
-    }, (err) => setError(err.message));
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const s = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setStart(s);
+      },
+      (err) => {
+        console.warn('Geolocation failed, using default location:', err.message);
+        setStart({ lat: 28.5449, lng: 77.1926 });
+      }
+    );
   };
 
   // Don't render a map with a hardcoded default center. Require either the

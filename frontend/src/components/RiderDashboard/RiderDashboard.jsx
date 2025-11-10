@@ -110,12 +110,12 @@ const RiderDashboard = () => {
     const getCurrentPosition = () => {
         return new Promise((resolve, reject) => {
             if (!navigator.geolocation) {
-                // Fallback to default location (e.g., college campus)
+                // Fallback to default location
                 console.warn('Geolocation not supported, using default location');
                 resolve({
                     coords: {
-                        latitude: 18.52,  // Replace with your campus/default location
-                        longitude: 73.91
+                        latitude: 18.518626152971162,  // Default rider start location
+                        longitude: 73.90637766220793
                     }
                 });
             } else {
@@ -126,8 +126,8 @@ const RiderDashboard = () => {
                         console.warn('Geolocation failed, using default location:', error.message);
                         resolve({
                             coords: {
-                                latitude: 28.5449,  // Replace with your campus/default location
-                                longitude: 77.1926
+                                latitude: 18.518626152971162,  // Default rider start location
+                                longitude: 73.90637766220793
                             }
                         });
                     },

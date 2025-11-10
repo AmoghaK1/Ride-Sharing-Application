@@ -24,10 +24,10 @@ const RiderDashboard = () => {
         },
         (error) => {
           console.error('Error getting location (geolocation not available on HTTP):', error);
-          // Set a default location for HTTP sites (replace with your campus coordinates)
+          // Set a default location for HTTP sites
           setCurrentLocation({
-            latitude: 18.52,
-            longitude: 73.91,
+            latitude: 18.518626152971162,
+            longitude: 73.90637766220793,
             address: 'Default Location'
           });
         },
@@ -39,8 +39,8 @@ const RiderDashboard = () => {
     } else {
       // Browser doesn't support geolocation, use default
       setCurrentLocation({
-        latitude: 18.52,
-        longitude: 73.91,
+        latitude: 18.518626152971162,
+        longitude: 73.90637766220793,
         address: 'Default Location'
       });
     }

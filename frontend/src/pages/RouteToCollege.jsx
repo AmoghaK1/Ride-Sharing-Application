@@ -77,14 +77,14 @@ const RouteToCollege = () => {
     if (!navigator.geolocation) {
       // Use default location if geolocation not supported
       console.warn('Geolocation not supported, using default location');
-      initializeLocation({ coords: { latitude: 28.5449, longitude: 77.1926 } });
+      initializeLocation({ coords: { latitude: 18.518626152971162, longitude: 73.90637766220793 } });
     } else {
       navigator.geolocation.getCurrentPosition(
         initializeLocation,
         (err) => {
           console.warn('Geolocation failed (HTTP site?), using default location:', err.message);
           // Use default location on error (e.g., HTTP site)
-          initializeLocation({ coords: { latitude: 28.5449, longitude: 77.1926 } });
+          initializeLocation({ coords: { latitude: 18.518626152971162, longitude: 73.90637766220793 } });
         },
         {
           timeout: 5000,
@@ -99,7 +99,7 @@ const RouteToCollege = () => {
     setError(null);
     if (!navigator.geolocation) {
       console.warn('Geolocation not supported, using default location');
-      setStart({ lat: 28.5449, lng: 77.1926 });
+      setStart({ lat: 18.518626152971162, lng: 73.90637766220793 });
       return;
     }
     navigator.geolocation.getCurrentPosition(
@@ -109,7 +109,7 @@ const RouteToCollege = () => {
       },
       (err) => {
         console.warn('Geolocation failed, using default location:', err.message);
-        setStart({ lat: 28.5449, lng: 77.1926 });
+        setStart({ lat: 18.518626152971162, lng: 73.90637766220793 });
       }
     );
   };
